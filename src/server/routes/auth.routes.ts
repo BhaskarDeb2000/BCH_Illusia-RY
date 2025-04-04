@@ -1,7 +1,8 @@
 
 import express from 'express';
-import { register, login, getMe } from '../controllers/auth.controller';
+import { register, login, getMe } from '../controllers/auth.controller.ts';
 import { authenticate } from '../middleware/auth.middleware';
+
 
 const router = express.Router();
 
@@ -25,5 +26,8 @@ router.post('/login', login);
  * @access Private
  */
 router.get('/me', authenticate, getMe);
+
+
+  
 
 export default router;
