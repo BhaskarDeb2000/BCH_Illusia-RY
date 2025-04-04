@@ -11,6 +11,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = '24h';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
+
+  console.log('✅ Register controller loaded'); 
   try {
     const { email, password, firstName, lastName } = req.body;
 
@@ -60,6 +62,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
+    console.log(email,password);
 
     // Validate input
     if (!email || !password) {
