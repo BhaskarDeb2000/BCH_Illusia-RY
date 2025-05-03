@@ -1,0 +1,91 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 260 25% 98%;
+    --foreground: 260 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 260 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 25% 15%;
+
+    --primary: 260 80% 75%;
+    --primary-foreground: 260 25% 15%;
+
+    --secondary: 260 10% 90%;
+    --secondary-foreground: 260 25% 15%;
+
+    --muted: 260 10% 90%;
+    --muted-foreground: 260 25% 40%;
+
+    --accent: 260 80% 75%;
+    --accent-foreground: 260 25% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 260 20% 85%;
+    --input: 260 20% 80%;
+    --ring: 260 80% 75%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 260 25% 98%;
+    --sidebar-foreground: 260 25% 15%;
+    --sidebar-primary: 260 80% 75%;
+    --sidebar-primary-foreground: 260 25% 15%;
+    --sidebar-accent: 260 10% 90%;
+    --sidebar-accent-foreground: 260 25% 15%;
+    --sidebar-border: 260 20% 85%;
+    --sidebar-ring: 260 80% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply mx-auto px-4 md:px-6 py-4 max-w-7xl;
+  }
+  
+  .btn-primary {
+    @apply bg-illusia-purple hover:bg-illusia-purple-dark text-white px-4 py-2 rounded-md transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md transition-colors;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+}

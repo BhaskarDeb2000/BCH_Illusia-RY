@@ -1,0 +1,45 @@
+,,,,
+EXAMPLE DATA (Raw data from initial inventory),,,,
+,,,,
+,,,,
+#,Description,Content summary,Storage details,Storage location
+2,Kypäriä,"Sotilaskypärä x 6 musta, large",Varastolaatikko,
+3,Kypäriä,"Sotilaskypärä x 6 musta, 3 x large, 3 x medium",Varastolaatikko,"Varastohyllyt, sisäänkäynnin puolella"
+4,Kypäriä,"Sotilaskypärä x 6 musta, small + pehmusteita",Varastolaatikko,"Varastohyllyt, sisäänkäynnin puolella"
+5,Taisteluliivejä (IKEA-kassi),"Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",Varastolaatikko,"Varastohyllyt, sisäänkäynnin puolella"
+6,Taisteluliivejä (IKEA-kassi),"Taisteluliivi x 5, musta (vanha malli) + taisteluliivi x 3, musta (kevyt), EL-nauhoilla",Varastolaatikko,"Varastohyllyt, sisäänkäynnin puolella"
+7,Taisteluliivejä (IKEA-kassi),"Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",Varastolaatikko,
+8,Suojalaseja/-maskeja + varusteita,"Suojalasit/-maski x 17, EL-nauhaa (2x3m, 3x2m), Molle-kiinnitteinen kännykkäpidike",Varastolaatikko,"Etuvaraston perällä, musta laatikko"
+9,Hävittäjien konsolit,"2 x hävittäjän Helms-konsoli, 2 x hävittäjän Weapons-konsoli",Varastolaatikko,
+10,Starcallerin konsolit,Starcallerin Helms- ja Weapons-konsolit,Varastolaatikko,
+11,Bridgen konsolit,7x bridge konsoleita,Varastolaatikko,
+12,Vaahtosammuttimet,"12x vaahtosammutinta, sammutuspeite",Varastolaatikko,"Etuvaraston perällä, musta laatikko"
+13,Esirippu,Tummansininen esirippu mustalla kuvioinnilla,Varastolaatikko,Takavaraston ikkunaseinällä
+14,Medical supplies,"Medbay supplies / wooden crate,Bedding, curtains, meds, instruments, manuals papers",Varastolaatikko,"Keskialue, alla"
+15,Medical supplies,"Medbay supplies / wooden crate,Splints bandages",Varastolaatikko,"Keskialue, alla"
+16,Medical supplies,"Medbay supplies / wooden crate, IV fluids, robes",Varastolaatikko,"Keskialue, alla"
+17,Medical supplies,Medbay supplies / wooden crate,Varastolaatikko,
+18,Medical supplies,Medbay supplies / bandages,Varastolaatikko,"Keskialue, sisäänkäynnin luona"
+19,Medical supplies,Medbay supplies / bandages / 2kpl tyynyjä,Varastolaatikko,"Keskialue, sisäänkäynnin luona"
+911,Ikea-pöydänjalkoja,8kpl sciencelab pöytien jalkoja (puuttuu kiinnikkeet),,Etuvarastossa
+912,"Työkalupakki, siniharmaa","Mostly empty, sisältää nippusiteitä",,"Varastohyllyt, sisäänkäynnin puolella"
+913,"Työkalupakki, vihreä",Tyhjä,,"Varastohyllyt, sisäänkäynnin puolella"
+914,Kypäriä,4kpl kypäriä insignialla,,"Varastohyllyt, sisäänkäynnin puolella"
+915,Rakennustarpeita,"6kpl puristimia, ruuvipakki",,"Varastohyllyt, sisäänkäynnin puolella"
+916,Rakennustarpeita,"Metallisia M-liitinpaloja, 100kpl laatikko",,"Varastohyllyt, sisäänkäynnin puolella"
+917,Huopia,17kpl ikea-huopia,IKEA-säkki,"Varastohyllyt, sisäänkäynnin puolella"
+918,Kertiksiä,Kertakäyttöastioit,Muovipussi,"Varastohyllyt, sisäänkäynnin puolella"
+919,Askartelutarpeita,Spray-maaleja ja liimoja,Punainen laatikko,"Varastohyllyt, sisäänkäynnin puolella"
+920,Skumppalasit,30ish kpl skumppalaseja,ruskea kori,"Varastohyllyt, sisäänkäynnin puolella"
+921,Tuuletin,Iso lattiatuuletin,,Etuvarastossa edessä keskellä
+922,Science-salkku,"Salkku, proppi. Sisältää koeputkia",,"Varastohyllyt, sisäänkäynnin puolella"
+923,Maitojääkaappi,"Kylmälaatikko, koneistettu",,Takavaraston perällä
+924,Muuttohanskat,Säkillinen muutto- ja suojahanskoja,,Takavaraston perällä
+925,Vaahtomuovipatjat,90x200 vaahtomuovipatjat,29 kpl,Takavaraston keskellä
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,NOTES ABOUT DATA,,
+,,"We are going to do a cleanup of our initial inverntory. This means we want to have separate data columns for units, storage details, storage location and content details.",,
