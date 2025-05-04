@@ -7,54 +7,76 @@ import { LayoutGrid, List } from "lucide-react";
 
 const sampleItems = [
   {
-    id: "1",
-    name: "Combat vests (IKEA bag)",
-    description: "Combat vest x5, black (new model), with EL-straps",
-    price: 39.29,
-    quantity: 5,
-    hasStorageBox: true,
-  },
-  {
     id: "2",
-    name: "Combat vests (IKEA bag)",
-    description:
-      "Combat vest x5, black (old model) + combat vest x3, black (light), with EL-straps",
-    price: 47.21,
-    quantity: 8,
+    name: "Kypäriä",
+    description: "Sotilaskypärä x 6 musta, large",
+    price: 2.5,
+    quantity: 6,
     hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kyparia-6L.png",
   },
   {
     id: "3",
-    name: "Helmets",
-    description: "Military helmet x6 black, large",
-    price: 9.62,
+    name: "Kypäriä",
+    description: "Sotilaskypärä x 6 musta, 3 x large, 3 x medium",
+    price: 2.5,
     quantity: 6,
     hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-3L%2C3M.png",
   },
   {
     id: "4",
-    name: "Helmets",
-    description: "Military helmet x6 black, 3 x large, 3 x medium",
-    price: 57.93,
+    name: "Kypäriä",
+    description: "Sotilaskypärä x 6 musta, small + pehmusteita",
+    price: 2.5,
     quantity: 6,
     hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-Sotilaskypa%CC%88ra%CC%88+x+6+musta%2Cpehmusteita.png",
   },
   {
     id: "5",
-    name: "Helmets",
-    description: "Military helmet x6 black, small + padding",
-    price: 91.24,
-    quantity: 6,
+    name: "Taisteluliivejä (IKEA-kassi)",
+    description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
+    price: 3.0,
+    quantity: 5,
     hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
   },
   {
     id: "6",
-    name: "Safety goggles/masks + straps",
+    name: "Taisteluliivejä (IKEA-kassi)",
     description:
-      "Safety goggles/masks x17, EL-straps (2x3m, 3x2m), Molle-compatible phone holder",
-    price: 18.36,
+      "Taisteluliivi x 5, musta (vanha malli) + taisteluliivi x 3, musta (kevyt), EL-nauhoilla",
+    price: 2.5,
+    quantity: 8,
+    hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
+  },
+  {
+    id: "7",
+    name: "Taisteluliivejä (IKEA-kassi)",
+    description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
+    price: 3.0,
+    quantity: 5,
+    hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
+  },
+  {
+    id: "8",
+    name: "Suojalaseja/-maskeja + varusteita",
+    description:
+      "Suojalasit/-maski x 17, EL-nauhaa (2x3m, 3x2m), Molle-kiinnitteinen kännykkäpidike",
+    price: 1.5,
     quantity: 17,
     hasStorageBox: true,
+    imageUrl:
+      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Suojalaseja%3A-maskeja+%2B+varusteita.png",
   },
 ];
 

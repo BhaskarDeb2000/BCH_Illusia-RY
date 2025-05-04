@@ -9,6 +9,7 @@ import {
   Info,
   Box,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -17,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import CartDrawer from "@/components/cart/CartDrawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useCartStore } from "@/lib/cart";
 
 interface ItemDetails {
@@ -45,12 +47,75 @@ interface ProtectionItem {
 const getProtectionItemById = (id: string): ProtectionItem | undefined => {
   const items: ProtectionItem[] = [
     {
-      id: "1",
-      name: "Combat vests (IKEA bag)",
-      description: "Combat vest x5, black (new model), with EL-straps",
-      price: 39.29,
+      id: "2",
+      name: "Kypäriä",
+      description: "Sotilaskypärä x 6 musta, large",
+      price: 2.5,
+      quantity: 6,
+      hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kyparia-6L.png",
+      details: {
+        color: "Black",
+        material: "High-impact plastic",
+        size: "Large",
+        features: ["Military helmet", "Adjustable straps", "Padding included"],
+        storageNotes: "Varastolaatikko",
+        condition: "Excellent",
+        lastChecked: "2024-03-15",
+      },
+    },
+    {
+      id: "3",
+      name: "Kypäriä",
+      description: "Sotilaskypärä x 6 musta, 3 x large, 3 x medium",
+      price: 2.5,
+      quantity: 6,
+      hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-3L%2C3M.png",
+      details: {
+        color: "Black",
+        material: "High-impact plastic",
+        size: "Mixed (3 Large, 3 Medium)",
+        features: ["Military helmet", "Adjustable straps", "Padding included"],
+        storageNotes: "Varastolaatikko, Varastohyllyt, sisäänkäynnin puolella",
+        condition: "Excellent",
+        lastChecked: "2024-03-15",
+      },
+    },
+    {
+      id: "4",
+      name: "Kypäriä",
+      description: "Sotilaskypärä x 6 musta, small + pehmusteita",
+      price: 2.5,
+      quantity: 6,
+      hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-Sotilaskypa%CC%88ra%CC%88+x+6+musta%2Cpehmusteita.png",
+      details: {
+        color: "Black",
+        material: "High-impact plastic",
+        size: "Small",
+        features: [
+          "Military helmet",
+          "Adjustable straps",
+          "Extra padding included",
+        ],
+        storageNotes: "Varastolaatikko, Varastohyllyt, sisäänkäynnin puolella",
+        condition: "Excellent",
+        lastChecked: "2024-03-15",
+      },
+    },
+    {
+      id: "5",
+      name: "Taisteluliivejä (IKEA-kassi)",
+      description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
+      price: 3.0,
       quantity: 5,
       hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
       details: {
         color: "Black",
         material: "Ballistic nylon",
@@ -59,21 +124,22 @@ const getProtectionItemById = (id: string): ProtectionItem | undefined => {
           "New model design",
           "EL-straps included",
           "Adjustable sizing",
-          "Multiple pouches",
         ],
-        storageNotes: "Stored in IKEA bag for protection",
+        storageNotes: "Varastolaatikko, Varastohyllyt, sisäänkäynnin puolella",
         condition: "New",
         lastChecked: "2024-03-15",
       },
     },
     {
-      id: "2",
-      name: "Combat vests (IKEA bag)",
+      id: "6",
+      name: "Taisteluliivejä (IKEA-kassi)",
       description:
-        "Combat vest x5, black (old model) + combat vest x3, black (light), with EL-straps",
-      price: 47.21,
+        "Taisteluliivi x 5, musta (vanha malli) + taisteluliivi x 3, musta (kevyt), EL-nauhoilla",
+      price: 2.5,
       quantity: 8,
       hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
       details: {
         color: "Black",
         material: "Ballistic nylon",
@@ -83,84 +149,44 @@ const getProtectionItemById = (id: string): ProtectionItem | undefined => {
           "EL-straps included",
           "Adjustable sizing",
         ],
-        storageNotes: "Stored in IKEA bag for protection",
+        storageNotes: "Varastolaatikko, Varastohyllyt, sisäänkäynnin puolella",
         condition: "Good",
         lastChecked: "2024-03-15",
       },
     },
     {
-      id: "3",
-      name: "Helmets",
-      description: "Military helmet x6 black, large",
-      price: 9.62,
-      quantity: 6,
+      id: "7",
+      name: "Taisteluliivejä (IKEA-kassi)",
+      description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
+      price: 3.0,
+      quantity: 5,
       hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
       details: {
         color: "Black",
-        size: "Large",
-        material: "High-impact plastic",
+        material: "Ballistic nylon",
+        size: "Universal fit",
         features: [
-          "Adjustable straps",
-          "Padding included",
-          "Ventilation system",
+          "New model design",
+          "EL-straps included",
+          "Adjustable sizing",
         ],
-        storageNotes: "Stored in protective box",
-        condition: "Excellent",
+        storageNotes: "Varastolaatikko",
+        condition: "New",
         lastChecked: "2024-03-15",
       },
     },
     {
-      id: "4",
-      name: "Helmets",
-      description: "Military helmet x6 black, 3 x large, 3 x medium",
-      price: 57.93,
-      quantity: 6,
-      hasStorageBox: true,
-      details: {
-        color: "Black",
-        size: "Mixed (3 Large, 3 Medium)",
-        material: "High-impact plastic",
-        features: [
-          "Adjustable straps",
-          "Padding included",
-          "Ventilation system",
-          "Size-specific padding",
-        ],
-        storageNotes: "Stored in protective box with size labels",
-        condition: "Excellent",
-        lastChecked: "2024-03-15",
-      },
-    },
-    {
-      id: "5",
-      name: "Helmets",
-      description: "Military helmet x6 black, small + padding",
-      price: 91.24,
-      quantity: 6,
-      hasStorageBox: true,
-      details: {
-        color: "Black",
-        size: "Small",
-        material: "High-impact plastic",
-        features: [
-          "Adjustable straps",
-          "Extra padding included",
-          "Ventilation system",
-          "Size-specific padding",
-        ],
-        storageNotes: "Stored in protective box with extra padding",
-        condition: "Excellent",
-        lastChecked: "2024-03-15",
-      },
-    },
-    {
-      id: "6",
-      name: "Safety goggles/masks + straps",
+      id: "8",
+      name: "Suojalaseja/-maskeja + varusteita",
       description:
-        "Safety goggles/masks x17, EL-straps (2x3m, 3x2m), Molle-compatible phone holder",
-      price: 18.36,
+        "Suojalasit/-maski x 17, EL-nauhaa (2x3m, 3x2m), Molle-kiinnitteinen kännykkäpidike",
+      price: 1.5,
       quantity: 17,
       hasStorageBox: true,
+      imageUrl:
+        "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Suojalaseja%3A-maskeja+%2B+varusteita.png",
       details: {
         color: "Clear/Black",
         material: "Polycarbonate/Elastic",
@@ -172,7 +198,7 @@ const getProtectionItemById = (id: string): ProtectionItem | undefined => {
           "Molle-compatible phone holder",
           "EL-straps included (2x3m, 3x2m)",
         ],
-        storageNotes: "Stored in protective case with individual compartments",
+        storageNotes: "Varastolaatikko, Etuvaraston perällä, musta laatikko",
         condition: "New",
         lastChecked: "2024-03-15",
       },
@@ -185,6 +211,7 @@ export default function ItemDetail() {
   const { id } = useParams<{ id: string }>();
   const [isAdded, setIsAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [hours, setHours] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
   // In a real app, you would fetch this data from your API
@@ -219,18 +246,20 @@ export default function ItemDetail() {
 
   const handleAddToCart = () => {
     if (item) {
+      const totalPrice = item.price * hours;
       addItem({
         id: item.id,
         name: item.name,
         description: item.description,
-        price: item.price,
+        price: totalPrice,
         quantity: quantity,
+        hours: hours,
         imageUrl: item.imageUrl,
       });
 
       setIsAdded(true);
       toast.success("Added to cart", {
-        description: `${item.name} (${quantity} pcs) has been added to your cart.`,
+        description: `${item.name} (${quantity} pcs) for ${hours} hours has been added to your cart.`,
       });
 
       // Reset the added state after 1.5 seconds
@@ -241,6 +270,12 @@ export default function ItemDetail() {
   const handleQuantityChange = (value: number) => {
     if (value >= 1 && value <= item.quantity) {
       setQuantity(value);
+    }
+  };
+
+  const handleHoursChange = (value: number) => {
+    if (value >= 1) {
+      setHours(value);
     }
   };
 
@@ -286,7 +321,7 @@ export default function ItemDetail() {
             <div>
               <h1 className="text-3xl font-bold mb-2">{item.name}</h1>
               <p className="text-xl font-bold text-gray-900 mb-4">
-                €{item.price.toFixed(2)}
+                €{item.price.toFixed(2)}/hour
               </p>
               <p className="text-gray-600 mb-4">{item.description}</p>
 
@@ -348,6 +383,83 @@ export default function ItemDetail() {
 
             <Separator />
 
+            {/* Booking Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Booking Details</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      disabled={quantity <= 1}
+                    >
+                      -
+                    </Button>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      max={item.quantity}
+                      value={quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(Number(e.target.value))
+                      }
+                      className="w-16 text-center"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      disabled={quantity >= item.quantity}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="hours">Hours</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleHoursChange(hours - 1)}
+                      disabled={hours <= 1}
+                    >
+                      -
+                    </Button>
+                    <Input
+                      id="hours"
+                      type="number"
+                      min="1"
+                      value={hours}
+                      onChange={(e) =>
+                        handleHoursChange(Number(e.target.value))
+                      }
+                      className="w-16 text-center"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleHoursChange(hours + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Total Price:</span>
+                  <span className="text-xl font-bold text-[#7C3AED]">
+                    €{(item.price * hours * quantity).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
               <Button
@@ -356,8 +468,11 @@ export default function ItemDetail() {
               >
                 Details
               </Button>
-              <Button className="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white">
-                Add
+              <Button
+                className="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white"
+                onClick={handleAddToCart}
+              >
+                Add to Cart
               </Button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 
-const AboutPage = () => {
+const About = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
@@ -77,4 +77,4 @@ const AboutPage = () => {
   );
 };
 
-export default AboutPage;
+export default About;
