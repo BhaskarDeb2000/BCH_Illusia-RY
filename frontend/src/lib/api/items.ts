@@ -6,9 +6,10 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
     .from('items')
     .insert([
       {
-        name: { en: input.description },
-        description: { en: input.contentSummary },
-        storage_details: { en: input.storageDetails },
+        name: input.name,
+        description: input.description,
+        content_details: input.contentSummary,
+        storage_details: input.storageDetails,
         location: input.storageLocation,
         quantity: input.quantity,
         category: input.category,
@@ -23,9 +24,10 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   return {
     id: data.id,
     number: data.id,
-    description: (data.name as { en: string }).en,
-    contentSummary: (data.description as { en: string }).en,
-    storageDetails: (data.storage_details as { en: string })?.en || '',
+    name: ensureLangObj(data.name),
+    description: ensureLangObj(data.description),
+    contentSummary: data.content_details || '',
+    storageDetails: ensureLangObj(data.storage_details),
     storageLocation: data.location || '',
     quantity: data.quantity || 0,
     category: data.category || '',
@@ -40,9 +42,9 @@ export async function updateItem(input: UpdateItemInput): Promise<Item> {
   const { data, error } = await supabase
     .from('items')
     .update({
-      name: input.description ? { en: input.description } : undefined,
-      description: input.contentSummary ? { en: input.contentSummary } : undefined,
-      storage_details: input.storageDetails ? { en: input.storageDetails } : undefined,
+      name: input.name,
+      description: input.description,
+      storage_details: input.storageDetails,
       location: input.storageLocation,
       quantity: input.quantity,
       category: input.category,
@@ -57,9 +59,10 @@ export async function updateItem(input: UpdateItemInput): Promise<Item> {
   return {
     id: data.id,
     number: data.id,
-    description: (data.name as { en: string }).en,
-    contentSummary: (data.description as { en: string }).en,
-    storageDetails: (data.storage_details as { en: string })?.en || '',
+    name: ensureLangObj(data.name),
+    description: ensureLangObj(data.description),
+    contentSummary: data.content_details || '',
+    storageDetails: ensureLangObj(data.storage_details),
     storageLocation: data.location || '',
     quantity: data.quantity || 0,
     category: data.category || '',
@@ -90,9 +93,10 @@ export async function getItem(itemId: string): Promise<Item> {
   return {
     id: data.id,
     number: data.id,
-    description: (data.name as { en: string }).en,
-    contentSummary: (data.description as { en: string }).en,
-    storageDetails: (data.storage_details as { en: string })?.en || '',
+    name: ensureLangObj(data.name),
+    description: ensureLangObj(data.description),
+    contentSummary: data.content_details || '',
+    storageDetails: ensureLangObj(data.storage_details),
     storageLocation: data.location || '',
     quantity: data.quantity || 0,
     category: data.category || '',
@@ -130,9 +134,10 @@ export async function getItems(filters?: ItemFilters): Promise<Item[]> {
   return data.map(item => ({
     id: item.id,
     number: item.id,
-    description: (item.name as { en: string }).en,
-    contentSummary: (item.description as { en: string }).en,
-    storageDetails: (item.storage_details as { en: string })?.en || '',
+    name: ensureLangObj(item.name),
+    description: ensureLangObj(item.description),
+    contentSummary: item.content_details || '',
+    storageDetails: ensureLangObj(item.storage_details),
     storageLocation: item.location || '',
     quantity: item.quantity || 0,
     category: item.category || '',
@@ -170,4 +175,13 @@ export async function getTags(): Promise<string[]> {
 
   if (error) throw error;
   return [...new Set(data.flatMap((item) => item.tags || []))];
+}
+
+function ensureLangObj(val: unknown): { en: string } {
+  if (!val) return { en: "" };
+  if (typeof val === "string") return { en: val };
+  if (typeof val === "object" && val !== null && 'en' in val && typeof (val as { en: unknown }).en === "string") {
+    return val as { en: string };
+  }
+  return { en: "" };
 } 

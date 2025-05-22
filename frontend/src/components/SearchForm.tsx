@@ -2,11 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format } from "date-fns";
-import { Calendar, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -15,11 +12,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,41 +24,37 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Category, Tag } from "@/types";
 import { Loader2 } from "lucide-react";
 
-const searchFormSchema = z.object({
-  query: z.string().optional(),
+const formSchema = z.object({
+  search: z.string().optional(),
   category: z.string().optional(),
+  location: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  minPrice: z.number().optional(),
-  maxPrice: z.number().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
 });
 
-type SearchFormValues = z.infer<typeof searchFormSchema>;
+type FormValues = z.infer<typeof formSchema>;
+
+const defaultValues: FormValues = {
+  search: "",
+  category: undefined,
+  location: undefined,
+  tags: undefined,
+};
 
 interface SearchFormProps {
   categories: Category[];
   tags: Tag[];
-  onSubmit: (data: SearchFormValues) => void;
+  onSubmit: (data: FormValues) => void;
 }
 
 export function SearchForm({ categories, tags, onSubmit }: SearchFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<SearchFormValues>({
-    resolver: zodResolver(searchFormSchema),
-    defaultValues: {
-      query: "",
-      category: undefined,
-      tags: [],
-      minPrice: undefined,
-      maxPrice: undefined,
-      startDate: undefined,
-      endDate: undefined,
-    },
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultValues,
   });
 
-  const handleSubmit = async (data: SearchFormValues) => {
+  const handleSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
       await onSubmit(data);
@@ -84,7 +72,7 @@ export function SearchForm({ categories, tags, onSubmit }: SearchFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="query"
+            name="search"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Search</FormLabel>
@@ -155,115 +143,13 @@ export function SearchForm({ categories, tags, onSubmit }: SearchFormProps) {
 
           <FormField
             control={form.control}
-            name="minPrice"
+            name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Min Price</FormLabel>
+                <FormLabel>Location</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Min price"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
+                  <Input placeholder="Enter location" {...field} />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="maxPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Max Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Max price"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Start Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className="w-full pl-3 text-left font-normal"
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>End Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className="w-full pl-3 text-left font-normal"
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
                 <FormMessage />
               </FormItem>
             )}

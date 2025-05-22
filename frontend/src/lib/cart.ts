@@ -5,10 +5,11 @@ export interface CartItem {
   id: string;
   name: string;
   description: string;
-  price: number;
   quantity: number;
-  hours: number;
   imageUrl?: string;
+  maxQuantity: number; // Maximum available quantity
+  price?: number;
+  category?: string;
 }
 
 interface CartStore {
@@ -18,6 +19,8 @@ interface CartStore {
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   getItemQuantity: (itemId: string) => number;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -29,17 +32,22 @@ export const useCartStore = create<CartStore>()(
         const existingItem = state.items.find(item => item.id === newItem.id);
         
         if (existingItem) {
+          const newQuantity = existingItem.quantity + newItem.quantity;
+          if (newQuantity > existingItem.maxQuantity) {
+            throw new Error(`Cannot add more than ${existingItem.maxQuantity} items`);
+          }
+          
           return {
             items: state.items.map(item =>
               item.id === newItem.id
-                ? { ...item, quantity: item.quantity + newItem.quantity }
+                ? { ...item, quantity: newQuantity }
                 : item
             ),
           };
         }
         
         return {
-          items: [...state.items, newItem],
+          items: [...state.items, { ...newItem, quantity: Math.min(newItem.quantity, newItem.maxQuantity) }],
         };
       }),
 
@@ -47,19 +55,42 @@ export const useCartStore = create<CartStore>()(
         items: state.items.filter(item => item.id !== itemId),
       })),
 
-      updateQuantity: (itemId, quantity) => set((state) => ({
-        items: state.items.map(item =>
-          item.id === itemId
-            ? { ...item, quantity }
-            : item
-        ),
-      })),
+      updateQuantity: (itemId, quantity) => set((state) => {
+        const item = state.items.find(item => item.id === itemId);
+        if (!item) return state;
+        
+        if (quantity > item.maxQuantity) {
+          throw new Error(`Cannot add more than ${item.maxQuantity} items`);
+        }
+        
+        if (quantity < 1) {
+          return {
+            items: state.items.filter(item => item.id !== itemId),
+          };
+        }
+        
+        return {
+          items: state.items.map(item =>
+            item.id === itemId
+              ? { ...item, quantity }
+              : item
+          ),
+        };
+      }),
 
       clearCart: () => set({ items: [] }),
 
       getItemQuantity: (itemId) => {
         const item = get().items.find(item => item.id === itemId);
         return item?.quantity || 0;
+      },
+
+      getTotalItems: () => {
+        return get().items.reduce((total, item) => total + item.quantity, 0);
+      },
+
+      getTotalPrice: () => {
+        return get().items.reduce((total, item) => total + (item.price || 0) * item.quantity, 0);
       },
     }),
     {

@@ -12,9 +12,11 @@ import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import { I18nProvider } from "./i18n";
+import Checkout from "./pages/Checkout";
 import Layout from "@/components/layout/Layout";
 import { ProtectionItemGrid } from "./components/ProtectionItemGrid";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import AuthErrorBoundary from "./components/auth/AuthErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -97,7 +99,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <I18nProvider>
+        <AuthErrorBoundary>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -108,18 +110,37 @@ const App = () => (
                 <Route path="/items/:id" element={<ItemDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<UserDashboard />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <UserDashboard />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/about" element={<About />} />
                 <Route
                   path="/protection-items"
-                  element={<ProtectionItemGrid items={sampleItems} />}
+                  element={
+                    <ProtectedRoute>
+                      <ProtectionItemGrid items={sampleItems} />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/checkout"
+                  element={
+                    <ProtectedRoute>
+                      <Checkout />
+                    </ProtectedRoute>
+                  }
                 />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
           </BrowserRouter>
-        </I18nProvider>
+        </AuthErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>

@@ -1,87 +1,27 @@
 import { useState } from "react";
 import { ItemList } from "@/components/items/ItemList";
 import { ItemDialog } from "@/components/items/ItemDialog";
-import { ProtectionItemGrid } from "@/components/ProtectionItemGrid";
+import ItemGrid from "@/components/items/ItemGrid";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
-
-const sampleItems = [
-  {
-    id: "2",
-    name: "Kypäriä",
-    description: "Sotilaskypärä x 6 musta, large",
-    price: 2.5,
-    quantity: 6,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kyparia-6L.png",
-  },
-  {
-    id: "3",
-    name: "Kypäriä",
-    description: "Sotilaskypärä x 6 musta, 3 x large, 3 x medium",
-    price: 2.5,
-    quantity: 6,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-3L%2C3M.png",
-  },
-  {
-    id: "4",
-    name: "Kypäriä",
-    description: "Sotilaskypärä x 6 musta, small + pehmusteita",
-    price: 2.5,
-    quantity: 6,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Kypa%CC%88ria%CC%88-Sotilaskypa%CC%88ra%CC%88+x+6+musta%2Cpehmusteita.png",
-  },
-  {
-    id: "5",
-    name: "Taisteluliivejä (IKEA-kassi)",
-    description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
-    price: 3.0,
-    quantity: 5,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
-  },
-  {
-    id: "6",
-    name: "Taisteluliivejä (IKEA-kassi)",
-    description:
-      "Taisteluliivi x 5, musta (vanha malli) + taisteluliivi x 3, musta (kevyt), EL-nauhoilla",
-    price: 2.5,
-    quantity: 8,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
-  },
-  {
-    id: "7",
-    name: "Taisteluliivejä (IKEA-kassi)",
-    description: "Taisteluliivi x 5, musta (uusi malli), EL-nauhoilla",
-    price: 3.0,
-    quantity: 5,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Taisteluliiveja%CC%88+(IKEA-kassi).webp",
-  },
-  {
-    id: "8",
-    name: "Suojalaseja/-maskeja + varusteita",
-    description:
-      "Suojalasit/-maski x 17, EL-nauhaa (2x3m, 3x2m), Molle-kiinnitteinen kännykkäpidike",
-    price: 1.5,
-    quantity: 17,
-    hasStorageBox: true,
-    imageUrl:
-      "https://schoolphotosbucket.s3.eu-north-1.amazonaws.com/Suojalaseja%3A-maskeja+%2B+varusteita.png",
-  },
-];
+import { useItems } from "@/hooks/useItems";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function ItemsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { items, isLoading, error, handleFilterChange } = useItems();
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -107,11 +47,17 @@ export default function ItemsPage() {
         </div>
       </div>
 
-      {viewMode === "grid" ? (
-        <ProtectionItemGrid items={sampleItems} />
-      ) : (
-        <ItemList />
-      )}
+      <ErrorBoundary>
+        {viewMode === "grid" ? (
+          <ItemGrid items={items} isLoading={isLoading} />
+        ) : (
+          <ItemList
+            items={items}
+            isLoading={isLoading}
+            onFilterChange={handleFilterChange}
+          />
+        )}
+      </ErrorBoundary>
 
       <div className="fixed bottom-6 right-6">
         <ItemDialog />

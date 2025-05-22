@@ -20,24 +20,24 @@ import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z
   .object({
-    firstName: z.string().min(1, "Etunimi on pakollinen"),
-    lastName: z.string().min(1, "Sukunimi on pakollinen"),
-    email: z.string().email("Virheellinen sähköpostiosoite"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
     password: z
       .string()
-      .min(8, "Salasanan on oltava vähintään 8 merkkiä pitkä")
+      .min(8, "Password must be at least 8 characters long")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Salasanan tulee sisältää isoja ja pieniä kirjaimia sekä numeroita"
+        "Password must contain uppercase and lowercase letters and numbers"
       ),
     confirmPassword: z.string(),
     organization: z.string().optional(),
     acceptTerms: z.boolean().refine((val) => val === true, {
-      message: "Sinun on hyväksyttävä käyttöehdot jatkaaksesi",
+      message: "You must accept the terms to continue",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Salasanat eivät täsmää",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
@@ -94,9 +94,9 @@ const Register = () => {
       <main className="flex-grow flex items-center justify-center py-12">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg">
           <div className="text-center">
-            <h1 className="text-2xl font-bold">Rekisteröidy</h1>
+            <h1 className="text-2xl font-bold">Register</h1>
             <p className="text-muted-foreground mt-2">
-              Luo tili käyttääksesi Illusia Storage -järjestelmää
+              Create an account to use the Illusia Storage system
             </p>
           </div>
 
@@ -108,9 +108,9 @@ const Register = () => {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Etunimi</FormLabel>
+                      <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Etunimi" {...field} />
+                        <Input placeholder="First name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,9 +122,9 @@ const Register = () => {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sukunimi</FormLabel>
+                      <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Sukunimi" {...field} />
+                        <Input placeholder="Last name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -137,9 +137,9 @@ const Register = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sähköposti</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="esimerkki@email.com" {...field} />
+                      <Input placeholder="example@email.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,9 +151,9 @@ const Register = () => {
                 name="organization"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organisaatio (valinnainen)</FormLabel>
+                    <FormLabel>Organization (optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Organisaation nimi" {...field} />
+                      <Input placeholder="Organization name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,12 +165,12 @@ const Register = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Salasana</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="********"
+                          placeholder="••••••••"
                           {...field}
                         />
                         <button
@@ -196,12 +196,12 @@ const Register = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vahvista salasana</FormLabel>
+                    <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="********"
+                          placeholder="••••••••"
                           {...field}
                         />
                         <button
@@ -236,21 +236,14 @@ const Register = () => {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-normal">
-                        Hyväksyn{" "}
-                        <a
-                          href="/terms"
+                      <FormLabel>
+                        I accept the{" "}
+                        <Link
+                          to="/terms"
                           className="text-illusia-purple hover:text-illusia-purple-dark"
                         >
-                          käyttöehdot
-                        </a>{" "}
-                        ja{" "}
-                        <a
-                          href="/privacy"
-                          className="text-illusia-purple hover:text-illusia-purple-dark"
-                        >
-                          tietosuojakäytännön
-                        </a>
+                          terms and conditions
+                        </Link>
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -266,12 +259,12 @@ const Register = () => {
                 {isLoading ? (
                   <div className="flex items-center">
                     <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Rekisteröidään...
+                    Registering...
                   </div>
                 ) : (
                   <div className="flex items-center">
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Rekisteröidy
+                    Register
                   </div>
                 )}
               </Button>
@@ -280,12 +273,12 @@ const Register = () => {
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Onko sinulla jo tili?{" "}
+              Already have an account?{" "}
               <Link
                 to="/login"
                 className="text-illusia-purple font-medium hover:text-illusia-purple-dark"
               >
-                Kirjaudu sisään
+                Login
               </Link>
             </p>
           </div>

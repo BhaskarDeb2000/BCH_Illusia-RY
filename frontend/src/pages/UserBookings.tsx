@@ -27,15 +27,26 @@ import {
 } from "@/lib/api/bookings";
 import { BookingForm } from "@/components/BookingForm";
 import { BookingStatus } from "@/types";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase/client";
 
 export function UserBookings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: bookings, isLoading } = useQuery({
-    queryKey: ["userBookings"],
-    queryFn: () => getUserBookings(supabase.auth.user()?.id || ""),
+  const { data: bookingsData, isLoading } = useQuery({
+    queryKey: ["userBookings", page, pageSize, searchQuery],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+      return getUserBookings(user.id, page, pageSize, searchQuery);
+    },
   });
 
   const { mutate: updateBookingStatus } = useMutation({
@@ -82,9 +93,26 @@ export function UserBookings() {
     );
   }
 
+  const bookings = bookingsData?.data || [];
+  const total = bookingsData?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-8">My Bookings</h1>
+
+      <div className="mb-6">
+        <Input
+          type="search"
+          placeholder="Search bookings..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1); // Reset to first page on search
+          }}
+          className="max-w-sm"
+        />
+      </div>
 
       <Table>
         <TableHeader>
@@ -97,7 +125,7 @@ export function UserBookings() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {bookings?.map((booking) => (
+          {bookings.map((booking) => (
             <TableRow key={booking.id}>
               <TableCell>{booking.item?.name}</TableCell>
               <TableCell>
@@ -164,9 +192,31 @@ export function UserBookings() {
         </TableBody>
       </Table>
 
-      {bookings?.length === 0 && (
+      {bookings.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500">No bookings found</p>
+        </div>
+      )}
+
+      {total > 0 && (
+        <div className="flex justify-center mt-4 gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="py-2 px-4">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= totalPages}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>

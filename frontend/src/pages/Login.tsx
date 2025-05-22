@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,47 +14,44 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  rememberMe: z.boolean().default(false),
 });
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, isAuthenticating, error } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast.error("Login failed", {
-        description: error.message,
+    try {
+      await signIn(values.email, values.password, values.rememberMe);
+      toast.success("Login successful!", {
+        description: "Welcome back to Illusia Storage System.",
       });
-      return;
-    }
 
-    toast.success("Login successful!", {
-      description: "Welcome back to Illusia Storage System.",
-    });
-    navigate("/");
+      // Redirect to the page the user was trying to access, or home
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
+    } catch (error) {
+      // Error is already handled in useAuth hook
+    }
   };
 
   const toggleShowPassword = () => {
@@ -81,7 +78,11 @@ const Login = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="example@email.com" {...field} />
+                      <Input
+                        placeholder="example@email.com"
+                        {...field}
+                        disabled={isAuthenticating}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,11 +101,13 @@ const Login = () => {
                           type={showPassword ? "text" : "password"}
                           placeholder="******"
                           {...field}
+                          disabled={isAuthenticating}
                         />
                         <button
                           type="button"
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                           onClick={toggleShowPassword}
+                          disabled={isAuthenticating}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -114,7 +117,25 @@ const Login = () => {
                         </button>
                       </div>
                     </FormControl>
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
+                      <FormField
+                        control={form.control}
+                        name="rememberMe"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled={isAuthenticating}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal">
+                              Remember me
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
                       <Link
                         to="/forgot-password"
                         className="text-sm text-illusia-purple hover:text-illusia-purple-dark"
@@ -130,9 +151,9 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full bg-illusia-purple hover:bg-illusia-purple-dark"
-                disabled={isLoading}
+                disabled={isAuthenticating}
               >
-                {isLoading ? (
+                {isAuthenticating ? (
                   <div className="flex items-center">
                     <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Signing in...

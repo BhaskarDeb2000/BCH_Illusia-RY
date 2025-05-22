@@ -53,13 +53,6 @@ const Index = () => {
                   >
                     Browse Items
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => navigate("/register")}
-                  >
-                    Register
-                  </Button>
                 </div>
               </div>
               <div className="hidden lg:block bg-white p-6 rounded-lg shadow-lg">
@@ -150,13 +143,6 @@ const Index = () => {
                 events today.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button
-                  size="lg"
-                  className="bg-white text-illusia-purple-900 hover:bg-gray-100"
-                  onClick={() => navigate("/register")}
-                >
-                  Register Now
-                </Button>
                 <Button
                   size="lg"
                   className="bg-illusia-purple hover:bg-illusia-purple-dark text-white border-none"

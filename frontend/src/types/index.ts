@@ -18,7 +18,6 @@ export interface Item {
   id: string;
   name: string;
   description: string;
-  price_per_day: number;
   category_id: string;
   category?: Category;
   tags?: Tag[];

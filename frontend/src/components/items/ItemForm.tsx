@@ -18,16 +18,30 @@ import { createItem, updateItem } from "@/lib/api/items";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-  number: z.number().min(1, "Item number is required"),
-  description: z.string().min(1, "Description is required"),
+  name: z
+    .object({
+      en: z.string().min(1, "Name is required"),
+    })
+    .strict(),
+  description: z
+    .object({
+      en: z.string().min(1, "Description is required"),
+    })
+    .strict(),
   contentSummary: z.string().min(1, "Content summary is required"),
-  storageDetails: z.string().min(1, "Storage details are required"),
+  storageDetails: z
+    .object({
+      en: z.string().min(1, "Storage details are required"),
+    })
+    .strict(),
   storageLocation: z.string().min(1, "Storage location is required"),
   quantity: z.number().min(1, "Quantity is required"),
   category: z.string().min(1, "Category is required"),
   tags: z.array(z.string()),
   imageUrl: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface ItemFormProps {
   item?: Item;
@@ -37,13 +51,13 @@ interface ItemFormProps {
 export function ItemForm({ item, onSuccess }: ItemFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      number: item?.number || 0,
-      description: item?.description || "",
+      name: { en: item?.name?.en || "" },
+      description: { en: item?.description?.en || "" },
       contentSummary: item?.contentSummary || "",
-      storageDetails: item?.storageDetails || "",
+      storageDetails: { en: item?.storageDetails?.en || "" },
       storageLocation: item?.storageLocation || "",
       quantity: item?.quantity || 1,
       category: item?.category || "",
@@ -52,25 +66,43 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       setIsLoading(true);
       if (item) {
         const updateInput: UpdateItemInput = {
           id: item.id,
-          ...values,
+          name: { en: values.name.en },
+          description: { en: values.description.en },
+          contentSummary: values.contentSummary,
+          storageDetails: { en: values.storageDetails.en },
+          storageLocation: values.storageLocation,
+          quantity: values.quantity,
+          category: values.category,
+          tags: values.tags,
+          imageUrl: values.imageUrl,
         };
         await updateItem(updateInput);
-        toast.success("Item updated successfully");
+        toast.success("Item updated");
       } else {
-        const createInput: CreateItemInput = values;
+        const createInput: CreateItemInput = {
+          name: { en: values.name.en },
+          description: { en: values.description.en },
+          contentSummary: values.contentSummary,
+          storageDetails: { en: values.storageDetails.en },
+          storageLocation: values.storageLocation,
+          quantity: values.quantity,
+          category: values.category,
+          tags: values.tags,
+          imageUrl: values.imageUrl,
+        };
         await createItem(createInput);
-        toast.success("Item created successfully");
+        toast.success("Item created");
       }
       onSuccess?.();
     } catch (error) {
       console.error("Failed to save item:", error);
-      toast.error("Failed to save item");
+      toast.error("Error");
     } finally {
       setIsLoading(false);
     }
@@ -81,16 +113,12 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="number"
+          name="name.en"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Item Number</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,12 +127,12 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
 
         <FormField
           control={form.control}
-          name="description"
+          name="description.en"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +146,7 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
             <FormItem>
               <FormLabel>Content Summary</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -127,12 +155,12 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
 
         <FormField
           control={form.control}
-          name="storageDetails"
+          name="storageDetails.en"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Storage Details</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,7 +172,7 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
           name="storageLocation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Storage Location</FormLabel>
+              <FormLabel>Location</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -190,7 +218,7 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>Image</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -200,7 +228,7 @@ export function ItemForm({ item, onSuccess }: ItemFormProps) {
         />
 
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : item ? "Update Item" : "Create Item"}
+          {isLoading ? "Please wait..." : item ? "Edit Item" : "Create Item"}
         </Button>
       </form>
     </Form>

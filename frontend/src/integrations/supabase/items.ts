@@ -1,18 +1,26 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Type for one item (translation fields are JSON)
-export type DBItem = {
+export interface DBItem {
   id: string;
-  name: Record<string, string>;
-  description: Record<string, string>;
+  name: {
+    [key: string]: string;
+  };
+  description: {
+    [key: string]: string;
+  };
   category: string;
   tags: string[];
   quantity: number;
-  image_url: string | null;
-  storage_details: Record<string, string> | null;
-  location: string | null;
-  created_at: string; // Added this property
-};
+  image_url?: string;
+  storage_details?: {
+    [key: string]: string;
+  };
+  location?: string;
+  price?: number;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export async function fetchItems(): Promise<DBItem[]> {
   const { data, error } = await supabase

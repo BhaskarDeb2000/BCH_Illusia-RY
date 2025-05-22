@@ -29,7 +29,6 @@ export function ItemCard({ item }: ItemCardProps) {
         <div className="space-y-2">
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="mr-2 h-4 w-4" />
-            <span>${item.price_per_day} per day</span>
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4" />

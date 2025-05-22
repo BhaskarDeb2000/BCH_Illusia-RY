@@ -67,7 +67,6 @@ export type Database = {
           image_url: string | null
           location: string | null
           name: Json
-          price: number
           quantity: number
           storage_details: Json | null
           storage_location: string | null
@@ -84,7 +83,6 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           name: Json
-          price?: number
           quantity?: number
           storage_details?: Json | null
           storage_location?: string | null
@@ -101,7 +99,6 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           name?: Json
-          price?: number
           quantity?: number
           storage_details?: Json | null
           storage_location?: string | null
@@ -311,3 +308,25 @@ export const Constants = {
     },
   },
 } as const
+
+export type InsertItem = {
+  name: Record<string, string>;
+  description: Record<string, string>;
+  category: string;
+  tags: string[];
+  quantity: number;
+  image_url?: string | null;
+  storage_details?: Record<string, string> | null;
+  location?: string | null;
+}
+
+export type UpdateItem = {
+  name?: Record<string, string>;
+  description?: Record<string, string>;
+  category?: string;
+  tags?: string[];
+  quantity?: number;
+  image_url?: string | null;
+  storage_details?: Record<string, string> | null;
+  location?: string | null;
+}

@@ -27,15 +27,52 @@ import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { createBooking } from "@/lib/api/bookings";
 
-const bookingFormSchema = z.object({
-  startDate: z.date({
-    required_error: "Please select a start date",
-  }),
-  endDate: z.date({
-    required_error: "Please select an end date",
-  }),
-  specialRequests: z.string().optional(),
-});
+const bookingFormSchema = z
+  .object({
+    startDate: z.date({
+      required_error: "Please select a start date",
+    }),
+    endDate: z.date({
+      required_error: "Please select an end date",
+    }),
+    specialRequests: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // Ensure end date is after start date
+      return data.endDate > data.startDate;
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Ensure booking duration is not more than 30 days
+      const diffTime = Math.abs(
+        data.endDate.getTime() - data.startDate.getTime()
+      );
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 30;
+    },
+    {
+      message: "Booking duration cannot exceed 30 days",
+      path: ["endDate"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Ensure booking is at least 24 hours in advance
+      const now = new Date();
+      const minStartDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      return data.startDate >= minStartDate;
+    },
+    {
+      message: "Booking must be made at least 24 hours in advance",
+      path: ["startDate"],
+    }
+  );
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
