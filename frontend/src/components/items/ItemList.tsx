@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Filter, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,83 +20,41 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Item, ItemFilters } from "@/types/item";
-import {
-  getItems,
-  getCategories,
-  getStorageLocations,
-  getTags,
-} from "@/lib/api/items";
 
 const ALL_OPTION = "all";
 
-export function ItemList() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [storageLocations, setStorageLocations] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
+interface ItemListProps {
+  items: Item[];
+  isLoading: boolean;
+  onFilterChange: (filters: ItemFilters) => void;
+}
+
+export function ItemList({ items, isLoading, onFilterChange }: ItemListProps) {
   const [filters, setFilters] = useState<ItemFilters>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadData();
-  }, [filters]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const [itemsData, categoriesData, locationsData, tagsData] =
-        await Promise.all([
-          getItems(filters),
-          getCategories(),
-          getStorageLocations(),
-          getTags(),
-        ]);
-
-      setItems(itemsData);
-      setCategories(categoriesData);
-      setStorageLocations(locationsData);
-      setTags(tagsData);
-    } catch (error) {
-      console.error("Failed to load data:", error);
-      setError("Failed to load items. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSearch = (value: string) => {
-    setFilters((prev) => ({ ...prev, search: value }));
+    const newFilters = { ...filters, search: value };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
   const handleCategoryChange = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       category: value === ALL_OPTION ? undefined : value,
-    }));
+    };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
   const handleLocationChange = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       storageLocation: value === ALL_OPTION ? undefined : value,
-    }));
+    };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
-
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <Button onClick={loadData}>Retry</Button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -104,7 +62,7 @@ export function ItemList() {
         <h1 className="text-2xl font-bold">Items</h1>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add Item
+          Create Item
         </Button>
       </div>
 
@@ -125,11 +83,13 @@ export function ItemList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL_OPTION}>All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
+            {Array.from(new Set(items.map((item) => item.category))).map(
+              (category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              )
+            )}
           </SelectContent>
         </Select>
         <Select onValueChange={handleLocationChange}>
@@ -138,11 +98,13 @@ export function ItemList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL_OPTION}>All Locations</SelectItem>
-            {storageLocations.map((location) => (
-              <SelectItem key={location} value={location}>
-                {location}
-              </SelectItem>
-            ))}
+            {Array.from(new Set(items.map((item) => item.storageLocation))).map(
+              (location) => (
+                <SelectItem key={location} value={location}>
+                  {location}
+                </SelectItem>
+              )
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -152,9 +114,9 @@ export function ItemList() {
           <TableHeader>
             <TableRow>
               <TableHead>#</TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Content</TableHead>
-              <TableHead>Storage</TableHead>
+              <TableHead>Storage Details</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Tags</TableHead>
@@ -177,14 +139,14 @@ export function ItemList() {
               items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.number}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>{item.contentSummary}</TableCell>
-                  <TableCell>{item.storageDetails}</TableCell>
+                  <TableCell>{item.name?.en || ""}</TableCell>
+                  <TableCell>{item.description?.en || ""}</TableCell>
+                  <TableCell>{item.storageDetails?.en || ""}</TableCell>
                   <TableCell>{item.storageLocation}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {item.tags.map((tag) => (
+                      {item.tags?.map((tag) => (
                         <Badge key={tag} variant="secondary">
                           {tag}
                         </Badge>

@@ -1,65 +1,27 @@
 import { useState } from "react";
 import { ItemList } from "@/components/items/ItemList";
 import { ItemDialog } from "@/components/items/ItemDialog";
-import { ProtectionItemGrid } from "@/components/ProtectionItemGrid";
+import ItemGrid from "@/components/items/ItemGrid";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
-
-const sampleItems = [
-  {
-    id: "1",
-    name: "Combat vests (IKEA bag)",
-    description: "Combat vest x5, black (new model), with EL-straps",
-    price: 39.29,
-    quantity: 5,
-    hasStorageBox: true,
-  },
-  {
-    id: "2",
-    name: "Combat vests (IKEA bag)",
-    description:
-      "Combat vest x5, black (old model) + combat vest x3, black (light), with EL-straps",
-    price: 47.21,
-    quantity: 8,
-    hasStorageBox: true,
-  },
-  {
-    id: "3",
-    name: "Helmets",
-    description: "Military helmet x6 black, large",
-    price: 9.62,
-    quantity: 6,
-    hasStorageBox: true,
-  },
-  {
-    id: "4",
-    name: "Helmets",
-    description: "Military helmet x6 black, 3 x large, 3 x medium",
-    price: 57.93,
-    quantity: 6,
-    hasStorageBox: true,
-  },
-  {
-    id: "5",
-    name: "Helmets",
-    description: "Military helmet x6 black, small + padding",
-    price: 91.24,
-    quantity: 6,
-    hasStorageBox: true,
-  },
-  {
-    id: "6",
-    name: "Safety goggles/masks + straps",
-    description:
-      "Safety goggles/masks x17, EL-straps (2x3m, 3x2m), Molle-compatible phone holder",
-    price: 18.36,
-    quantity: 17,
-    hasStorageBox: true,
-  },
-];
+import { useItems } from "@/hooks/useItems";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function ItemsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { items, isLoading, error, handleFilterChange } = useItems();
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -85,11 +47,17 @@ export default function ItemsPage() {
         </div>
       </div>
 
-      {viewMode === "grid" ? (
-        <ProtectionItemGrid items={sampleItems} />
-      ) : (
-        <ItemList />
-      )}
+      <ErrorBoundary>
+        {viewMode === "grid" ? (
+          <ItemGrid items={items} isLoading={isLoading} />
+        ) : (
+          <ItemList
+            items={items}
+            isLoading={isLoading}
+            onFilterChange={handleFilterChange}
+          />
+        )}
+      </ErrorBoundary>
 
       <div className="fixed bottom-6 right-6">
         <ItemDialog />

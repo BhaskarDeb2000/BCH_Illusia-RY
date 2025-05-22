@@ -1,21 +1,18 @@
-
-import { useState } from 'react';
-import ItemCard from '../ui/ItemCard';
-import { Button } from '@/components/ui/button';
-import { DBItem } from '@/integrations/supabase/items';
-import { useTranslation } from '@/i18n';
+import { useState } from "react";
+import ItemCard from "../ui/ItemCard";
+import { Button } from "@/components/ui/button";
+import { Item } from "@/types/item";
 
 interface ItemGridProps {
-  items: DBItem[];
+  items: Item[];
   isLoading?: boolean;
 }
 
-const ItemGrid = ({ items, isLoading = false }: ItemGridProps) => {
+export default function ItemGrid({ items, isLoading }: ItemGridProps) {
   const [displayLimit, setDisplayLimit] = useState(12);
-  const { t, lang } = useTranslation();
 
   const handleLoadMore = () => {
-    setDisplayLimit(prevLimit => prevLimit + 12);
+    setDisplayLimit((prevLimit) => prevLimit + 12);
   };
 
   if (isLoading) {
@@ -36,13 +33,8 @@ const ItemGrid = ({ items, isLoading = false }: ItemGridProps) => {
   if (!items || items.length === 0) {
     return (
       <div className="text-center p-8 border rounded-lg bg-muted/20">
-        <h3 className="text-xl font-medium mb-2">{t('item.notAvailable')}</h3>
-        <p className="text-muted-foreground">
-          {lang === "fi" 
-            ? "Yhtään tarviketta ei löytynyt annetuilla hakukriteereillä." 
-            : "No items found with the provided search criteria."
-          }
-        </p>
+        <h3 className="text-xl font-medium mb-2">Not Available</h3>
+        <p className="text-muted-foreground">No items found</p>
       </div>
     );
   }
@@ -57,16 +49,11 @@ const ItemGrid = ({ items, isLoading = false }: ItemGridProps) => {
 
       {items.length > displayLimit && (
         <div className="flex justify-center mt-8">
-          <Button
-            variant="secondary"
-            onClick={handleLoadMore}
-          >
-            {t('item.loadMore')}
+          <Button variant="secondary" onClick={handleLoadMore}>
+            Load More Items
           </Button>
         </div>
       )}
     </div>
   );
-};
-
-export default ItemGrid;
+}

@@ -12,6 +12,7 @@ import {
   XCircle,
   CheckCircle,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -26,95 +27,65 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { getUserBookings } from "@/lib/api/bookings";
 
-// Mock data for user bookings
-const bookings = [
-  {
-    id: "booking-1",
-    status: "pending",
-    startDate: "2023-11-20",
-    endDate: "2023-11-22",
-    items: [
-      {
-        id: "1",
-        name: "Patjat (20kpl)",
-        quantity: 10,
-        imageUrl: "/placeholder.svg",
-      },
-      {
-        id: "2",
-        name: "Ensiapulaukku",
-        quantity: 1,
-        imageUrl: "/placeholder.svg",
-      },
-    ],
-    createdAt: "2023-11-15T12:30:00",
-  },
-  {
-    id: "booking-2",
-    status: "approved",
-    startDate: "2023-12-05",
-    endDate: "2023-12-12",
-    items: [
-      {
-        id: "3",
-        name: "LED-valaisimet",
-        quantity: 5,
-        imageUrl: "/placeholder.svg",
-      },
-      {
-        id: "4",
-        name: "Pöytä, kokoontaitettava",
-        quantity: 2,
-        imageUrl: "/placeholder.svg",
-      },
-      {
-        id: "5",
-        name: "Tuoleja (10kpl)",
-        quantity: 20,
-        imageUrl: "/placeholder.svg",
-      },
-    ],
-    createdAt: "2023-11-10T09:15:00",
-  },
-  {
-    id: "booking-3",
-    status: "rejected",
-    startDate: "2023-10-15",
-    endDate: "2023-10-18",
-    items: [
-      {
-        id: "6",
-        name: "Keskiaikaiset asut",
-        quantity: 3,
-        imageUrl: "/placeholder.svg",
-      },
-    ],
-    rejectionReason: "Tarvikkeita ei ole saatavilla valittuna ajankohtana",
-    createdAt: "2023-10-01T14:45:00",
-  },
-  {
-    id: "booking-4",
-    status: "completed",
-    startDate: "2023-09-10",
-    endDate: "2023-09-15",
-    items: [
-      {
-        id: "7",
-        name: "Nopat (eri kokoja)",
-        quantity: 5,
-        imageUrl: "/placeholder.svg",
-      },
-      {
-        id: "8",
-        name: "Pöytäpelimatot",
-        quantity: 2,
-        imageUrl: "/placeholder.svg",
-      },
-    ],
-    createdAt: "2023-08-25T11:20:00",
-  },
-];
+// Utility functions
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  return format(new Date(dateString), "dd.MM.yyyy", { locale: fi });
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "approved":
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    case "pending":
+      return <Clock className="h-5 w-5 text-yellow-500" />;
+    case "rejected":
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    case "completed":
+      return <CheckCircle className="h-5 w-5 text-blue-500" />;
+    default:
+      return <AlertCircle className="h-5 w-5 text-gray-500" />;
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  const statusMap = {
+    approved: { label: "Approved", variant: "default" },
+    pending: { label: "Pending", variant: "secondary" },
+    rejected: { label: "Rejected", variant: "destructive" },
+    completed: { label: "Completed", variant: "outline" },
+  };
+
+  const { label, variant } = statusMap[status as keyof typeof statusMap] || {
+    label: status,
+    variant: "default",
+  };
+
+  return (
+    <Badge
+      variant={variant as "default" | "secondary" | "destructive" | "outline"}
+    >
+      {label}
+    </Badge>
+  );
+};
 
 // Mock user data
 const user = {
@@ -128,14 +99,126 @@ const user = {
   status: "active",
 };
 
+const profileFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  organization: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+const passwordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain uppercase, lowercase, and numbers"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+
 const UserDashboard = () => {
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const { data: bookingsData, isLoading } = useQuery({
+    queryKey: ["userBookings"],
+    queryFn: async () => {
+      if (!user) throw new Error("User not authenticated");
+      return getUserBookings(user.id, 1, 10);
+    },
+  });
+
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      firstName: user?.user_metadata?.firstName || "",
+      lastName: user?.user_metadata?.lastName || "",
+      email: user?.email || "",
+      organization: user?.user_metadata?.organization || "",
+    },
+  });
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   const handleCancelBooking = useCallback((bookingId: string) => {
-    toast.success("Varaus peruutettu", {
-      description: "Varauspyyntö on peruutettu onnistuneesti.",
-    });
+    toast.success("Booking cancelled successfully");
   }, []);
+
+  const onProfileSubmit = async (values: ProfileFormValues) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: values.email,
+        data: {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          organization: values.organization,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error("Failed to update profile", {
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+      });
+    }
+  };
+
+  const onPasswordSubmit = async (values: PasswordFormValues) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: values.newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      passwordForm.reset();
+    } catch (error) {
+      toast.error("Failed to update password", {
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const bookings = bookingsData?.data || [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -143,18 +226,18 @@ const UserDashboard = () => {
       <main className="flex-grow container-custom py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Käyttäjäpaneeli</h1>
+            <h1 className="text-3xl font-bold mb-1">User Dashboard</h1>
             <p className="text-muted-foreground">
-              Tervetuloa takaisin, {user.firstName}!
+              Welcome back, {user.user_metadata?.firstName || "User"}!
             </p>
           </div>
           <Button
             variant="outline"
             className="mt-4 md:mt-0"
-            onClick={() => toast.info("Kirjautuminen ulos...")}
+            onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Kirjaudu ulos
+            Logout
           </Button>
         </div>
 
@@ -164,9 +247,9 @@ const UserDashboard = () => {
           className="space-y-8"
         >
           <TabsList className="grid grid-cols-3 md:w-[400px]">
-            <TabsTrigger value="overview">Yhteenveto</TabsTrigger>
-            <TabsTrigger value="bookings">Varaukset</TabsTrigger>
-            <TabsTrigger value="profile">Profiili</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
@@ -175,7 +258,7 @@ const UserDashboard = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Aktiiviset varaukset
+                    Active bookings
                   </CardTitle>
                   <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -184,14 +267,14 @@ const UserDashboard = () => {
                     {bookings.filter((b) => b.status === "approved").length}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    +1 odottava varaus
+                    +1 pending booking
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Seuraava varaus
+                    Next booking
                   </CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -199,27 +282,27 @@ const UserDashboard = () => {
                   <div className="text-2xl font-bold">
                     {formatDate(
                       bookings.find((b) => b.status === "approved")
-                        ?.startDate || ""
+                        ?.start_date || ""
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    3 tarviketta varattu
+                    3 items booked
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Jäsenyyden tila
+                    Membership status
                   </CardTitle>
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
-                    Aktiivinen
+                    Active
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Jäsen vuodesta {new Date(user.registeredAt).getFullYear()}
+                    Member since {new Date(user.created_at).getFullYear()}
                   </p>
                 </CardContent>
               </Card>
@@ -228,15 +311,13 @@ const UserDashboard = () => {
             {/* Recent bookings */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
-                  Viimeisimmät varaukset
-                </h2>
+                <h2 className="text-xl font-semibold">Recent bookings</h2>
                 <Button
                   variant="link"
                   onClick={() => setActiveTab("bookings")}
                   className="text-sm text-illusia-purple"
                 >
-                  Näytä kaikki
+                  Show all
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -250,18 +331,18 @@ const UserDashboard = () => {
                           {getStatusIcon(booking.status)}
                           <div className="ml-3">
                             <p className="font-medium">
-                              Varaus #{booking.id.split("-")[1]}
+                              Booking #{booking.id.split("-")[1]}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {formatDate(booking.startDate)} -{" "}
-                              {formatDate(booking.endDate)}
+                              {formatDate(booking.start_date)} -{" "}
+                              {formatDate(booking.end_date)}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           {getStatusBadge(booking.status)}
                           <p className="text-sm text-muted-foreground mt-1">
-                            {booking.items.length} tarviketta
+                            {booking.item?.name}
                           </p>
                         </div>
                       </div>
@@ -274,11 +355,11 @@ const UserDashboard = () => {
 
           <TabsContent value="bookings" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Kaikki varaukset</h2>
+              <h2 className="text-xl font-semibold">All Bookings</h2>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Suodata
+                  Filter
                 </Button>
               </div>
             </div>
@@ -294,15 +375,11 @@ const UserDashboard = () => {
                         </div>
                         <div>
                           <CardTitle className="text-base">
-                            Varaus #{booking.id.split("-")[1]}
+                            Booking #{booking.id.split("-")[1]}
                           </CardTitle>
                           <CardDescription>
-                            Luotu{" "}
-                            {format(
-                              new Date(booking.createdAt),
-                              "dd.MM.yyyy HH:mm",
-                              { locale: fi }
-                            )}
+                            Created{" "}
+                            {format(new Date(booking.created_at), "PPP")}
                           </CardDescription>
                         </div>
                       </div>
@@ -314,53 +391,68 @@ const UserDashboard = () => {
                       <div className="flex items-center mb-2">
                         <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
                         <span className="font-medium">
-                          {formatDate(booking.startDate)} -{" "}
-                          {formatDate(booking.endDate)}
+                          {format(new Date(booking.start_date), "PPP")} -{" "}
+                          {format(new Date(booking.end_date), "PPP")}
                         </span>
                       </div>
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 text-muted-foreground mr-2" />
                         <span className="text-sm text-muted-foreground">
-                          Varauksen kesto:{" "}
-                          {(new Date(booking.endDate).getTime() -
-                            new Date(booking.startDate).getTime()) /
+                          Booking duration:{" "}
+                          {(new Date(booking.end_date).getTime() -
+                            new Date(booking.start_date).getTime()) /
                             (1000 * 60 * 60 * 24) +
                             1}{" "}
-                          päivää
+                          days
                         </span>
                       </div>
                     </div>
 
-                    <h3 className="font-medium mb-2">Varatut tarvikkeet</h3>
+                    <h3 className="font-medium mb-2">Booked Items</h3>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {booking.items.map((item) => (
-                        <li key={item.id} className="flex items-center">
-                          <div className="h-12 w-12 bg-muted rounded flex-shrink-0 overflow-hidden">
-                            <img
-                              src={item.imageUrl || "/placeholder.svg"}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="ml-3">
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {item.quantity} kpl
-                            </p>
-                          </div>
-                        </li>
-                      ))}
+                      <li className="flex items-center">
+                        <div className="h-12 w-12 bg-muted rounded flex-shrink-0 overflow-hidden">
+                          <img
+                            src="/placeholder.svg"
+                            alt={booking.item?.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="ml-3">
+                          <p className="font-medium">{booking.item?.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {booking.item?.price_per_day} €/day
+                          </p>
+                        </div>
+                      </li>
                     </ul>
 
-                    {booking.rejectionReason && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <p className="text-sm font-medium text-red-800">
-                          Hylkäyksen syy:
-                        </p>
-                        <p className="text-sm text-red-700">
-                          {booking.rejectionReason}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{booking.item?.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(booking.start_date), "PPP")} -{" "}
+                          {format(new Date(booking.end_date), "PPP")}
                         </p>
                       </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          booking.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : booking.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : booking.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {booking.status}
+                      </span>
+                    </div>
+                    {booking.special_requests && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Special requests: {booking.special_requests}
+                      </p>
                     )}
 
                     {booking.status === "pending" && (
@@ -371,7 +463,7 @@ const UserDashboard = () => {
                           className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
                           <XCircle className="h-4 w-4 mr-2" />
-                          Peruuta varaus
+                          Cancel booking
                         </Button>
                       </div>
                     )}
@@ -383,34 +475,37 @@ const UserDashboard = () => {
 
           <TabsContent value="profile" className="space-y-8">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Käyttäjätiedot</h2>
+              <h2 className="text-xl font-semibold mb-4">User Information</h2>
               <Card>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Nimi</p>
+                      <p className="text-sm text-muted-foreground mb-1">Name</p>
                       <p className="font-medium">
-                        {user.firstName} {user.lastName}
+                        {user.user_metadata?.firstName}{" "}
+                        {user.user_metadata?.lastName}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
-                        Sähköposti
+                        Email
                       </p>
                       <p className="font-medium">{user.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
-                        Organisaatio
+                        Organization
                       </p>
-                      <p className="font-medium">{user.organization}</p>
+                      <p className="font-medium">
+                        {user.user_metadata?.organization}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
-                        Jäsen alkaen
+                        Member since
                       </p>
                       <p className="font-medium">
-                        {formatDate(user.registeredAt)}
+                        {formatDate(user.created_at)}
                       </p>
                     </div>
                   </div>
@@ -418,7 +513,7 @@ const UserDashboard = () => {
                   <div className="mt-6 flex justify-end">
                     <Button>
                       <Settings className="h-4 w-4 mr-2" />
-                      Muokkaa tietoja
+                      Edit Information
                     </Button>
                   </div>
                 </CardContent>
@@ -426,82 +521,79 @@ const UserDashboard = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Salasanan vaihtaminen
-              </h2>
+              <h2 className="text-xl font-semibold mb-4">Password change</h2>
               <Card>
                 <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="current-password"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Nykyinen salasana
-                      </label>
-                      <input
-                        type="password"
-                        id="current-password"
-                        className="w-full p-2 border rounded-md"
-                        placeholder="********"
+                  <Form {...passwordForm}>
+                    <form
+                      onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="new-password"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Uusi salasana
-                      </label>
-                      <input
-                        type="password"
-                        id="new-password"
-                        className="w-full p-2 border rounded-md"
-                        placeholder="********"
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="confirm-password"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Vahvista uusi salasana
-                      </label>
-                      <input
-                        type="password"
-                        id="confirm-password"
-                        className="w-full p-2 border rounded-md"
-                        placeholder="********"
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm new password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end">
-                    <Button>Vaihda salasana</Button>
-                  </div>
+                      <div className="flex justify-end">
+                        <Button type="submit">Change password</Button>
+                      </div>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4">Tilin poistaminen</h2>
+              <h2 className="text-xl font-semibold mb-4">Account deletion</h2>
               <Card className="border-red-200">
                 <CardContent className="p-6">
                   <p className="text-muted-foreground mb-4">
-                    Tilin poistaminen poistaa kaikki käyttäjätietosi ja
-                    varaushistoriasi pysyvästi. Tätä toimintoa ei voi peruuttaa.
+                    Account deletion will permanently delete all your user data
+                    and booking history. This action cannot be undone.
                   </p>
 
                   <Button
                     variant="outline"
                     className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                     onClick={() =>
-                      toast.error(
-                        "Tämä toiminto on poistettu käytöstä demoa varten."
-                      )
+                      toast.error("This feature is disabled for demo purposes.")
                     }
                   >
-                    Poista tilini
+                    Delete account
                   </Button>
                 </CardContent>
               </Card>

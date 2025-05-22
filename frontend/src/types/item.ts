@@ -1,9 +1,16 @@
 export interface Item {
   id: string;
   number: string;
-  description: string;
+  name: {
+    en: string;
+  };
+  description: {
+    en: string;
+  };
   contentSummary: string;
-  storageDetails: string;
+  storageDetails: {
+    en: string;
+  };
   storageLocation: string;
   quantity: number;
   category: string;
@@ -13,10 +20,20 @@ export interface Item {
   updatedAt: string;
 }
 
+// Alias for backward compatibility
+export type DBItem = Item;
+
 export interface CreateItemInput {
-  description: string;
+  name: {
+    en: string;
+  };
+  description: {
+    en: string;
+  };
   contentSummary: string;
-  storageDetails: string;
+  storageDetails: {
+    en: string;
+  };
   storageLocation: string;
   quantity: number;
   category: string;
@@ -26,9 +43,16 @@ export interface CreateItemInput {
 
 export interface UpdateItemInput {
   id: string;
-  description?: string;
+  name?: {
+    en: string;
+  };
+  description?: {
+    en: string;
+  };
   contentSummary?: string;
-  storageDetails?: string;
+  storageDetails?: {
+    en: string;
+  };
   storageLocation?: string;
   quantity?: number;
   category?: string;
@@ -41,4 +65,9 @@ export interface ItemFilters {
   category?: string;
   storageLocation?: string;
   tags?: string[];
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  inStock?: boolean;
 } 

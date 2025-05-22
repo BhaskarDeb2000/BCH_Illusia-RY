@@ -2,16 +2,48 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://sxsdmvlypsdaiykwlmuo.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4c2Rtdmx5cHNkYWl5a3dsbXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzODg1MzYsImV4cCI6MjA2MDk2NDUzNn0.LKtDBEziHdOu6DUMHvcdCVXpo-XjHe_N6Q7G4GvY-Wc";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('Initializing Supabase client...');
-console.log('URL:', SUPABASE_URL);
-console.log('Key:', SUPABASE_PUBLISHABLE_KEY);
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-console.log('Supabase client initialized:', supabase);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'illusia-storage-hub-auth',
+    storage: {
+      getItem: (key) => {
+        try {
+          const value = localStorage.getItem(key);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error reading from localStorage:', error);
+          return null;
+        }
+      },
+      setItem: (key, value) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error writing to localStorage:', error);
+        }
+      },
+      removeItem: (key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.error('Error removing from localStorage:', error);
+        }
+      }
+    },
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development'
+  }
+});

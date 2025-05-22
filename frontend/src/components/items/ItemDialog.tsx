@@ -36,14 +36,14 @@ export function ItemDialog({ item, onSuccess }: ItemDialogProps) {
           ) : (
             <>
               <Plus className="h-4 w-4 mr-2" />
-              Add Item
+              Create Item
             </>
           )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{item ? "Edit Item" : "Add New Item"}</DialogTitle>
+          <DialogTitle>{item ? "Edit Item" : "Create Item"}</DialogTitle>
         </DialogHeader>
         <ItemForm item={item} onSuccess={handleSuccess} />
       </DialogContent>

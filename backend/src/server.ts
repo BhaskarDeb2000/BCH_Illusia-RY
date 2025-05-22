@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import profileRoutes from './routes/profile.routes';
 
 dotenv.config();
 
@@ -15,6 +16,9 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Ilusia Storage Hub API' });
 });
+
+// Routes
+app.use('/api/profile', profileRoutes);
 
 // Start server
 app.listen(port, () => {
